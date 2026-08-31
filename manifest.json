@@ -1,7 +1,7 @@
 {
   "name": "KienoraAI",
   "short_name": "KienoraAI",
-  "start_url": "./index.html",
+  "start_url": "index.html",
   "scope": "./",
   "display": "standalone",
   "theme_color": "#4f46e5",

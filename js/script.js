@@ -752,3 +752,28 @@ window.addEventListener("appinstalled", () => {
 
   deferredInstallPrompt = null;
 });
+//thêm tạm thời để test
+async function testKienoraAPI() {
+  try {
+    const result = await postApi({
+      action: "ask",
+      username: currentUser || "",
+      question: "Hello"
+    });
+
+    console.log("KIENORA API TEST:", result);
+
+    alert(
+      "API trả về:\n\n" +
+      JSON.stringify(result, null, 2)
+    );
+
+  } catch (error) {
+    console.error("API TEST ERROR:", error);
+
+    alert(
+      "API lỗi:\n\n" +
+      error.message
+    );
+  }
+}

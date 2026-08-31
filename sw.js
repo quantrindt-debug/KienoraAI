@@ -2,15 +2,14 @@ const CACHE_NAME = "kienoraai-v1";
 
 const APP_SHELL = [
   "./",
-  "./index.html",
+  "./KienoraAi.html",
   "./manifest.json",
   "./js/script.js"
 ];
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
   );
   self.skipWaiting();
 });
@@ -30,7 +29,8 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   event.respondWith(
-    caches.match(event.request)
-      .then(cached => cached || fetch(event.request))
+    caches.match(event.request).then(
+      cached => cached || fetch(event.request)
+    )
   );
 });

@@ -706,3 +706,49 @@ const API_URL = "https://script.google.com/macros/s/AKfycby8GRv6ew_QapByIvYL3RS3
       }
       renderQAListInModal();
     }
+//Cài đặt app trên điện thoại
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+
+  const installBtn = document.getElementById("installAppBtn");
+  if (installBtn) {
+    installBtn.classList.remove("hidden");
+  }
+});
+
+async function installKienoraAI() {
+  if (!deferredInstallPrompt) {
+    alert(
+      "Trình duyệt chưa cung cấp nút cài đặt tự động. " +
+      "Hãy mở menu trình duyệt và chọn 'Cài đặt ứng dụng' hoặc 'Thêm vào màn hình chính'."
+    );
+    return;
+  }
+
+  deferredInstallPrompt.prompt();
+
+  const result = await deferredInstallPrompt.userChoice;
+
+  if (result.outcome === "accepted") {
+    console.log("KienoraAI đã được cài đặt.");
+  }
+
+  deferredInstallPrompt = null;
+
+  const installBtn = document.getElementById("installAppBtn");
+  if (installBtn) {
+    installBtn.classList.add("hidden");
+  }
+}
+
+window.addEventListener("appinstalled", () => {
+  const installBtn = document.getElementById("installAppBtn");
+  if (installBtn) {
+    installBtn.classList.add("hidden");
+  }
+
+  deferredInstallPrompt = null;
+});

@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4f46e5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Trợ lý ảo KienoraAI</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    html { scroll-behavior: smooth; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+  </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen flex flex-col items-center justify-center p-4 font-sans">
+
+  <!-- ================= AUTH ================= -->
+  <div class="fixed top-4 right-4 z-50 flex items-center gap-2">
+    <div id="authArea"
+         class="bg-white/90 backdrop-blur-md border border-slate-200 px-4 py-2 rounded-2xl shadow-lg flex items-center gap-3 text-xs">
+      <div id="userInfoDisplay" class="flex items-center gap-2">
+        <span id="authStatusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+        <span id="authUsernameText" class="font-bold text-slate-700">
+          Khách (Chưa đăng nhập)
+        </span>
+      </div>
+      <div class="h-4 w-px bg-slate-200"></div>
+      <div id="authButtons"></div>
+    </div>
+  </div>
+
+  <!-- ================= MAIN ================= -->
+  <main class="max-w-md w-full bg-white rounded-3xl shadow-xl p-6 md:p-8 border border-slate-200 text-center">
+    <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl mx-auto flex items-center justify-center text-2xl mb-4 shadow-inner">
+      <i class="fa-solid fa-robot"></i>
+    </div>
+
+    <h1 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight">
+      KienoraAI
+    </h1>
+
+    <p class="text-xs text-slate-500 mt-1 mb-6">
+      Trợ lý ảo quản lý và tra cứu tri thức
+    </p>
+
+    <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl text-left text-xs text-slate-700 space-y-2">
+      <p class="font-bold text-indigo-900">
+        <i class="fa-solid fa-circle-info mr-1"></i>
+        Hướng dẫn nhanh
+      </p>
+      <p>• Gõ <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-200">/help</code> để xem lệnh.</p>
+      <p>• Gõ <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-200">/quanly</code> hoặc <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-200">/ql</code> để mở kho tri thức.</p>
+      <p>• Gõ <code class="bg-white px-1.5 py-0.5 rounded text-indigo-600 font-bold border border-indigo-200">/day [hỏi] | [đáp]</code> để dạy KienoraAI.</p>
+      <p>• Có thể thêm <b>tên file + link tải</b> khi lưu tri thức.</p>
+    </div>
+  </main>
+
+  <!-- ================= COMMAND WIDGET ================= -->
+  <div id="eduCommandWidget" class="fixed bottom-5 right-5 z-50 font-sans">
+    <button onclick="toggleCommandBox()"
+      class="bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-xl transition-all duration-300 hover:scale-105 focus:outline-none relative">
+      <i id="cmdIcon" class="fa-solid fa-wand-magic-sparkles"></i>
+      <span class="absolute top-0 right-0 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full animate-pulse"></span>
+    </button>
+
+    <div id="commandBoxContainer"
+      class="hidden absolute bottom-16 right-0 w-80 sm:w-96 bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col transition-all duration-300 transform scale-95 opacity-0 origin-bottom-right">
+
+      <div class="bg-gradient-to-r from-indigo-600 to-sky-600 text-white p-4 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center text-white text-sm font-bold shadow-inner">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wide">Trợ lý ảo KienoraAI</h3>
+            <p class="text-[10px] text-indigo-100 mt-0.5">
+              Gõ <code class="bg-black/20 px-1 rounded">/help</code> để trợ giúp
+            </p>
+          </div>
+        </div>
+        <button onclick="toggleCommandBox()" class="text-indigo-100 hover:text-white p-1 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div id="cmdMessages" class="p-4 h-80 overflow-y-auto space-y-3 bg-slate-50 text-xs text-slate-700">
+        <div class="flex items-start gap-2">
+          <div class="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold">AI</div>
+          <div class="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm border border-slate-100 max-w-[85%] leading-relaxed">
+            Xin chào! Tôi là <b>KienoraAI</b>. Hãy đăng nhập để sử dụng kho tri thức cá nhân và chức năng dạy AI.
+          </div>
+        </div>
+      </div>
+
+      <div class="p-3 bg-white border-t border-slate-100 flex items-center gap-2">
+        <input type="text" id="cmdInput"
+          placeholder="Nhập /help hoặc lệnh cần dùng..."
+          class="flex-1 bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+          onkeypress="handleCmdKeyPress(event)">
+        <button onclick="executeUserCommand()"
+          class="bg-indigo-600 hover:bg-indigo-500 text-white w-10 h-10 rounded-xl flex items-center justify-center text-xs shrink-0 shadow transition">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= KNOWLEDGE MANAGER ================= -->
+  <div id="qaManagerModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl flex flex-col max-h-[88vh]">
+
+      <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-bold">
+            <i class="fa-solid fa-database text-xs"></i>
+          </div>
+          <div>
+            <h3 id="qaModalTitleText" class="font-bold text-slate-800 text-sm uppercase">
+              Kho tri thức KienoraAI
+            </h3>
+            <p id="qaModalSubtitle" class="text-[10px] text-slate-400 mt-0.5"></p>
+          </div>
+        </div>
+        <button onclick="closeQAManager()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto py-4 space-y-4">
+
+        <div class="bg-indigo-50 border border-indigo-100 p-3.5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-bold text-indigo-900">
+              <i class="fa-solid fa-cloud-arrow-down mr-1"></i>
+              Sao lưu & phục hồi
+            </p>
+            <p class="text-[10px] text-indigo-700">
+              Tải kho tri thức về máy hoặc nhập lại tệp JSON.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="exportJsonFile()"
+              class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow flex items-center gap-1.5">
+              <i class="fa-solid fa-download"></i> Tải JSON
+            </button>
+
+            <label id="importJsonLabel"
+              class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-xl transition shadow flex items-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-upload"></i> Nhập JSON
+              <input type="file" id="importFileObj" accept=".json,application/json"
+                     class="hidden" onchange="importJsonFile(event)">
+            </label>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+          <p class="text-[11px] font-bold text-slate-600 uppercase">
+            Thêm tri thức & tài liệu
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <input type="text" id="newQ"
+              placeholder="Câu hỏi / chủ đề"
+              class="bg-white border border-slate-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+
+            <input type="text" id="newA"
+              placeholder="Câu trả lời"
+              class="bg-white border border-slate-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+
+            <input type="text" id="newFileName"
+              placeholder="Tên tệp, VD: QuyChe.pdf"
+              class="bg-white border border-slate-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+
+            <input type="url" id="newFileUrl"
+              placeholder="Link tải tài liệu https://..."
+              class="bg-white border border-slate-200 rounded-xl p-2 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+          </div>
+
+          <button id="saveKnowledgeBtn" onclick="addNewQAWithFile()"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-xl text-xs transition shadow">
+            <i class="fa-solid fa-file-arrow-down mr-1"></i>
+            Lưu kiến thức & tệp đính kèm
+          </button>
+
+          <p class="text-[10px] text-slate-400">
+            Link phải bắt đầu bằng <b>https://</b> hoặc <b>http://</b>.
+          </p>
+        </div>
+
+        <div>
+          <p class="text-[11px] font-bold text-slate-500 mb-2">
+            Danh sách tri thức đang lưu:
+          </p>
+          <div id="qaTableList" class="space-y-2"></div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end">
+        <button onclick="closeQAManager()"
+          class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= AUTH MODAL ================= -->
+  <div id="authModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl flex flex-col">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
+        <h3 id="authModalTitle" class="font-bold text-slate-800 text-sm uppercase">
+          Đăng nhập KienoraAI
+        </h3>
+        <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-[11px] font-bold text-slate-600 mb-1 block">Tên đăng nhập:</label>
+          <input type="text" id="modalUsername"
+            class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+            placeholder="Nhập tên tài khoản...">
+        </div>
+
+        <div>
+          <label class="text-[11px] font-bold text-slate-600 mb-1 block">Mật khẩu:</label>
+          <input type="password" id="modalPassword"
+            class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+            placeholder="Nhập mật khẩu...">
+        </div>
+
+        <div id="registerExtraField" class="hidden">
+          <label class="text-[11px] font-bold text-slate-600 mb-1 block">Email liên hệ:</label>
+          <input type="email" id="modalEmail"
+            class="w-full bg-slate-100 border border-slate-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+            placeholder="email@domain.com">
+        </div>
+
+        <button onclick="submitAuthForm()" id="authSubmitBtn"
+          class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md mt-2">
+          Đăng nhập
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  /* ==========================================================
+     KIENORAAI - FRONTEND
+     API Google Apps Script giữ nguyên URL bạn đã cung cấp.
+     ========================================================== */
+
+  const API_URL = "https://script.google.com/macros/s/AKfycbyI1-e7CthYOcTdZcuqZxG3QfgIejdi2l5ntM7o-aynAAFnV3MUmpdhyFFhuZ8IRH6L/exec";
+
+  let currentUser = localStorage.getItem("kienora_current_user") || null;
+  let currentRole = localStorage.getItem("kienora_current_role") || null;
+
+  let sharedSheetData = [];
+  let personalSheetData = [];
+  let authMode = "login";
+
+  const STORAGE_SHARED = "kienora_learned_qa";
+
+  /* ================= HELPERS ================= */
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function normalizeItem(item) {
+    return {
+      q: String(item?.q ?? item?.Q ?? "").trim(),
+      a: String(item?.a ?? item?.A ?? "").trim(),
+      fileName: String(item?.fileName ?? item?.FileName ?? "").trim(),
+      fileUrl: String(item?.fileUrl ?? item?.FileUrl ?? "").trim()
+    };
+  }
+
+  function normalizeList(list) {
+    return Array.isArray(list) ? list.map(normalizeItem) : [];
+  }
+
+  function isValidHttpUrl(url) {
+    if (!url) return true;
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === "https:" || parsed.protocol === "http:";
+    } catch {
+      return false;
+    }
+  }
+
+  function safeDownloadUrl(url) {
+    if (!isValidHttpUrl(url)) return "";
+    return escapeHtml(url);
+  }
+
+  function getLearnedQA() {
+    if (sharedSheetData.length) return sharedSheetData;
+
+    try {
+      return normalizeList(JSON.parse(localStorage.getItem(STORAGE_SHARED) || "[]"));
+    } catch {
+      return [];
+    }
+  }
+
+  function setSharedData(data) {
+    sharedSheetData = normalizeList(data);
+    localStorage.setItem(STORAGE_SHARED, JSON.stringify(sharedSheetData));
+  }
+
+  async function postApi(payload) {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error("HTTP " + response.status);
+    }
+
+    return await response.json();
+  }
+
+  /* ================= CLOUD DATA ================= */
+
+  async function loadCloudData(showAlert = false) {
+    try {
+      let url = API_URL + "?action=get_data";
+      if (currentUser) {
+        url += "&username=" + encodeURIComponent(currentUser);
+      }
+
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("HTTP " + response.status);
+
+      const data = await response.json();
+
+      const shared = Array.isArray(data.sheet1) ? data.sheet1 : (Array.isArray(data.data) ? data.data : []);
+      setSharedData(shared);
+
+      personalSheetData = Array.isArray(data.personal)
+        ? normalizeList(data.personal)
+        : [];
+
+      if (showAlert) {
+        addAIMessage("🔄 <b>Đồng bộ thành công</b> dữ liệu KienoraAI với Google Sheets.");
+      }
+
+      renderQAListInModal();
+      return true;
+    } catch (error) {
+      try {
+        sharedSheetData = normalizeList(
+          JSON.parse(localStorage.getItem(STORAGE_SHARED) || "[]")
+        );
+      } catch {
+        sharedSheetData = [];
+      }
+
+      if (showAlert) {
+        addAIMessage("⚠️ Không thể kết nối Google Sheets. KienoraAI đang sử dụng dữ liệu cục bộ đã lưu.");
+      }
+
+      return false;
+    }
+  }
+
+  async function syncToCloud(newData) {
+    if (currentRole !== "admin") {
+      throw new Error("NO_PERMISSION");
+    }
+
+    const normalized = normalizeList(newData);
+    setSharedData(normalized);
+
+    try {
+      const result = await postApi({
+        action: "sync_shared",
+        username: currentUser,
+        data: normalized
+      });
+
+      if (result?.status && result.status !== "success") {
+        throw new Error(result.message || "Google Apps Script từ chối đồng bộ.");
+      }
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /* ================= AUTH ================= */
+
+  function updateAuthUI() {
+    const dot = document.getElementById("authStatusDot");
+    const text = document.getElementById("authUsernameText");
+    const buttons = document.getElementById("authButtons");
+
+    if (currentUser) {
+      dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+      text.innerText =
+        currentUser + (currentRole === "admin" ? " (Quản trị)" : " (Cá nhân)");
+
+      buttons.innerHTML = `
+        <button onclick="logout()"
+          class="bg-rose-50 hover:bg-rose-100 text-rose-600 px-3 py-1.5 rounded-xl font-bold transition">
+          Đăng xuất
+        </button>`;
+    } else {
+      dot.className = "w-2.5 h-2.5 rounded-full bg-slate-400";
+      text.innerText = "Khách (Chưa đăng nhập)";
+
+      buttons.innerHTML = `
+        <div class="flex items-center gap-1.5">
+          <button onclick="openAuthModal('login')"
+            class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl font-bold transition shadow-sm">
+            Đăng nhập
+          </button>
+          <button onclick="openAuthModal('register')"
+            class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-xl font-bold transition">
+            Đăng ký
+          </button>
+        </div>`;
+    }
+  }
+
+  function openAuthModal(mode) {
+    authMode = mode;
+
+    document.getElementById("authModal").classList.remove("hidden");
+    document.getElementById("modalUsername").value = "";
+    document.getElementById("modalPassword").value = "";
+    document.getElementById("modalEmail").value = "";
+
+    const title = document.getElementById("authModalTitle");
+    const btn = document.getElementById("authSubmitBtn");
+    const extra = document.getElementById("registerExtraField");
+
+    if (mode === "register") {
+      title.innerText = "Đăng ký tài khoản KienoraAI";
+      btn.innerText = "Gửi yêu cầu đăng ký";
+      extra.classList.remove("hidden");
+    } else {
+      title.innerText = "Đăng nhập KienoraAI";
+      btn.innerText = "Đăng nhập";
+      extra.classList.add("hidden");
+    }
+  }
+
+  function closeAuthModal() {
+    document.getElementById("authModal").classList.add("hidden");
+  }
+
+  async function submitAuthForm() {
+    const username = document.getElementById("modalUsername").value.trim();
+    const password = document.getElementById("modalPassword").value.trim();
+    const email = document.getElementById("modalEmail").value.trim();
+    const btn = document.getElementById("authSubmitBtn");
+
+    if (!username || !password) {
+      alert("Vui lòng điền đầy đủ tên đăng nhập và mật khẩu.");
+      return;
+    }
+
+    btn.disabled = true;
+
+    try {
+      if (authMode === "register") {
+        const result = await postApi({
+          action: "register",
+          username,
+          password,
+          email
+        });
+
+        alert(result?.message || "Đã gửi yêu cầu đăng ký.");
+        if (result?.status === "success") closeAuthModal();
+      } else {
+        const result = await postApi({
+          action: "login",
+          username,
+          password
+        });
+
+        if (result?.status !== "success") {
+          alert(result?.message || "Đăng nhập không thành công.");
+          return;
+        }
+
+        currentUser = result.username || username;
+        currentRole = result.role || "user";
+
+        localStorage.setItem("kienora_current_user", currentUser);
+        localStorage.setItem("kienora_current_role", currentRole);
+
+        updateAuthUI();
+        closeAuthModal();
+        await loadCloudData();
+
+        addAIMessage("🎉 <b>Đăng nhập KienoraAI thành công!</b> Chào mừng " + escapeHtml(currentUser) + ".");
+      }
+    } catch (error) {
+      alert("❌ Không thể kết nối máy chủ KienoraAI.");
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function logout() {
+    currentUser = null;
+    currentRole = null;
+
+    localStorage.removeItem("kienora_current_user");
+    localStorage.removeItem("kienora_current_role");
+
+    personalSheetData = [];
+    updateAuthUI();
+    await loadCloudData();
+
+    alert("Đã đăng xuất KienoraAI.");
+  }
+
+  /* ================= COMMAND UI ================= */
+
+  function toggleCommandBox() {
+    const box = document.getElementById("commandBoxContainer");
+    const icon = document.getElementById("cmdIcon");
+
+    if (box.classList.contains("hidden")) {
+      box.classList.remove("hidden");
+
+      setTimeout(() => {
+        box.classList.remove("scale-95", "opacity-0");
+        box.classList.add("scale-100", "opacity-100");
+        document.getElementById("cmdInput").focus();
+      }, 10);
+
+      icon.classList.remove("fa-wand-magic-sparkles");
+      icon.classList.add("fa-xmark");
+    } else {
+      box.classList.remove("scale-100", "opacity-100");
+      box.classList.add("scale-95", "opacity-0");
+
+      setTimeout(() => box.classList.add("hidden"), 200);
+
+      icon.classList.remove("fa-xmark");
+      icon.classList.add("fa-wand-magic-sparkles");
+    }
+  }
+
+  function handleCmdKeyPress(event) {
+    if (event.key === "Enter") executeUserCommand();
+  }
+
+  function addAIMessage(html) {
+    const container = document.getElementById("cmdMessages");
+
+    container.insertAdjacentHTML("beforeend", `
+      <div class="flex items-start gap-2">
+        <div class="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold">AI</div>
+        <div class="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm border border-slate-100 max-w-[85%] leading-relaxed text-xs">
+          ${html}
+        </div>
+      </div>
+    `);
+
+    container.scrollTop = container.scrollHeight;
+  }
+
+  /* ================= KNOWLEDGE ================= */
+
+  async function addNewQAWithFile() {
+    const q = document.getElementById("newQ").value.trim();
+    const a = document.getElementById("newA").value.trim();
+    const fileName = document.getElementById("newFileName").value.trim();
+    const fileUrl = document.getElementById("newFileUrl").value.trim();
+    const btn = document.getElementById("saveKnowledgeBtn");
+
+    if (!q || !a) {
+      alert("Vui lòng nhập tối thiểu Câu hỏi và Câu trả lời.");
+      return;
+    }
+
+    if (fileUrl && !isValidHttpUrl(fileUrl)) {
+      alert("Link tài liệu không hợp lệ. Hãy dùng link bắt đầu bằng http:// hoặc https://");
+      return;
+    }
+
+    btn.disabled = true;
+
+    const item = {
+      q: q.toLowerCase(),
+      a,
+      fileName,
+      fileUrl
+    };
+
+    try {
+      if (currentRole === "admin") {
+        const data = getLearnedQA();
+        data.push(item);
+
+        await syncToCloud(data);
+        alert("✅ Đã thêm thành công vào kho tri thức chung KienoraAI.");
+      } else {
+        if (!currentUser) {
+          alert("⚠️ Bạn cần đăng nhập để lưu tri thức cá nhân.");
+          return;
+        }
+
+        const result = await postApi({
+          action: "teach_with_file",
+          username: currentUser,
+          q: item.q,
+          a: item.a,
+          fileName: item.fileName,
+          fileUrl: item.fileUrl
+        });
+
+        if (result?.status && result.status !== "success") {
+          throw new Error(result.message || "Không lưu được tri thức.");
+        }
+
+        personalSheetData.push(item);
+        alert("✅ Đã lưu tri thức cá nhân KienoraAI và gửi yêu cầu kiểm duyệt.");
+      }
+
+      clearKnowledgeForm();
+      renderQAListInModal();
+    } catch (error) {
+      if (error.message === "NO_PERMISSION") {
+        alert("⛔ Bạn không có quyền sửa kho tri thức chung.");
+      } else {
+        alert("❌ Không thể lưu tri thức. Vui lòng kiểm tra kết nối Google Sheets.");
+      }
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function clearKnowledgeForm() {
+    document.getElementById("newQ").value = "";
+    document.getElementById("newA").value = "";
+    document.getElementById("newFileName").value = "";
+    document.getElementById("newFileUrl").value = "";
+  }
+
+  function openQAManager() {
+    const modal = document.getElementById("qaManagerModal");
+    const title = document.getElementById("qaModalTitleText");
+    const subtitle = document.getElementById("qaModalSubtitle");
+    const importLabel = document.getElementById("importJsonLabel");
+    const saveBtn = document.getElementById("saveKnowledgeBtn");
+
+    if (currentRole === "admin") {
+      title.innerText = "Kho tri thức chung KienoraAI";
+      subtitle.innerText = "Quản trị viên có toàn quyền thêm, xóa, nhập và xuất dữ liệu.";
+      importLabel.classList.remove("hidden");
+      saveBtn.innerHTML = '<i class="fa-solid fa-file-arrow-down mr-1"></i> Lưu vào kho chung';
+    } else if (currentUser) {
+      title.innerText = "Kho tri thức cá nhân KienoraAI";
+      subtitle.innerText = "Tri thức cá nhân của tài khoản hiện tại.";
+      importLabel.classList.add("hidden");
+      saveBtn.innerHTML = '<i class="fa-solid fa-file-arrow-down mr-1"></i> Lưu vào kho cá nhân';
+    } else {
+      title.innerText = "Kho tri thức KienoraAI";
+      subtitle.innerText = "Hãy đăng nhập để thêm tri thức cá nhân.";
+      importLabel.classList.add("hidden");
+      saveBtn.innerHTML = '<i class="fa-solid fa-file-arrow-down mr-1"></i> Lưu tri thức';
+    }
+
+    modal.classList.remove("hidden");
+    renderQAListInModal();
+  }
+
+  function closeQAManager() {
+    document.getElementById("qaManagerModal").classList.add("hidden");
+  }
+
+  function renderQAListInModal() {
+    const container = document.getElementById("qaTableList");
+    const data = currentRole === "admin" ? getLearnedQA() : personalSheetData;
+
+    if (!data.length) {
+      container.innerHTML = `
+        <div class="text-slate-400 text-center py-4 italic text-xs">
+          Chưa có dữ liệu nào.
+        </div>`;
+      return;
+    }
+
+    let html = "";
+
+    data.forEach((rawItem, index) => {
+      const item = normalizeItem(rawItem);
+      const safeUrl = safeDownloadUrl(item.fileUrl);
+
+      html += `
+        <div class="bg-white border border-slate-200 rounded-xl p-3 text-xs shadow-sm">
+          <div class="flex justify-between items-start gap-3">
+            <div class="space-y-1 min-w-0 flex-1">
+              <p class="font-bold text-indigo-700 break-words">
+                <i class="fa-solid fa-circle-question mr-1"></i>
+                ${escapeHtml(item.q)}
+              </p>
+
+              <p class="text-slate-600 break-words">
+                <i class="fa-solid fa-comment-dots mr-1 text-emerald-600"></i>
+                ${escapeHtml(item.a)}
+              </p>
+
+              ${
+                item.fileName
+                  ? `<p class="text-[10px] text-sky-600 font-semibold">
+                       <i class="fa-solid fa-paperclip mr-1"></i>
+                       ${escapeHtml(item.fileName)}
+                     </p>`
+                  : ""
+              }
+
+              ${
+                safeUrl
+                  ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer"
+                       class="inline-flex items-center gap-1 text-[10px] text-indigo-600 font-bold hover:underline">
+                       <i class="fa-solid fa-download"></i> Mở / tải tài liệu
+                     </a>`
+                  : ""
+              }
+            </div>
+
+            <button onclick="deleteQAItem(${index})"
+              class="text-rose-500 hover:text-rose-700 p-2 transition shrink-0"
+              title="Xóa mục này">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+  }
+
+  async function deleteQAItem(index) {
+    if (!confirm("Bạn có chắc muốn xóa mục tri thức này?")) return;
+
+    try {
+      if (currentRole === "admin") {
+        const data = getLearnedQA();
+        data.splice(index, 1);
+        await syncToCloud(data);
+        alert("🗑️ Đã xóa khỏi kho tri thức chung.");
+      } else {
+        if (!currentUser) {
+          alert("⚠️ Bạn chưa đăng nhập.");
+          return;
+        }
+
+        personalSheetData.splice(index, 1);
+
+        /* Giữ tương thích với backend cũ:
+           nếu Apps Script chưa có action delete_personal,
+           dữ liệu phía frontend vẫn được cập nhật.
+           Backend có thể bổ sung action riêng sau. */
+        try {
+          await postApi({
+            action: "delete_personal",
+            username: currentUser,
+            index
+          });
+        } catch (ignore) {}
+
+        alert("🗑️ Đã xóa mục khỏi kho cá nhân.");
+      }
+
+      renderQAListInModal();
+    } catch (error) {
+      alert("❌ Không thể xóa dữ liệu.");
+    }
+  }
+
+  /* ================= IMPORT / EXPORT ================= */
+
+  function exportJsonFile() {
+    const data =
+      currentRole === "admin" ? getLearnedQA() : personalSheetData;
+
+    const blob = new Blob(
+      [JSON.stringify(data, null, 2)],
+      { type: "application/json;charset=utf-8" }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download =
+      currentRole === "admin"
+        ? "kienoraai_kho_tri_thuc_chung.json"
+        : "kienoraai_kho_tri_thuc_ca_nhan.json";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function importJsonFile(event) {
+    if (currentRole !== "admin") {
+      alert("⛔ Chỉ Quản trị viên mới được nhập JSON vào kho chung.");
+      event.target.value = "";
+      return;
+    }
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = async function(e) {
+      try {
+        const parsed = JSON.parse(e.target.result);
+
+        if (!Array.isArray(parsed)) {
+          throw new Error("INVALID_FORMAT");
+        }
+
+        const normalized = normalizeList(parsed);
+
+        if (!normalized.every(item => item.q && item.a)) {
+          throw new Error("INVALID_ITEM");
+        }
+
+        await syncToCloud(normalized);
+        renderQAListInModal();
+
+        alert(`📥 Nhập JSON thành công: ${normalized.length} mục.`);
+      } catch (error) {
+        alert("❌ Tệp JSON không hợp lệ hoặc không thể đồng bộ.");
+      } finally {
+        event.target.value = "";
+      }
+    };
+
+    reader.readAsText(file);
+  }
+
+  /* ================= AI RESPONSE ================= */
+
+  async function generateAIResponse(userInput) {
+    const text = userInput.trim();
+    const lowerText = text.toLowerCase();
+    const learnedList = getLearnedQA();
+
+    if (lowerText === "/help" || lowerText === "/giupdo") {
+      let html = `
+        🤖 <b>HƯỚNG DẪN LỆNH KIENORAAI</b><br><br>
+
+        <b>1. Hệ thống</b><br>
+        • <code class="text-indigo-600 font-bold">/help</code> - Xem danh sách lệnh.<br>
+        • <code class="text-indigo-600 font-bold">/sync</code> / <code class="text-indigo-600 font-bold">/lammoi</code> - Đồng bộ Google Sheets.<br>
+        • <code class="text-indigo-600 font-bold">/thongtin</code> / <code class="text-indigo-600 font-bold">/info</code> - Xem tài khoản.<br>
+        • <code class="text-indigo-600 font-bold">/thongke</code> - Thống kê.<br><br>
+
+        <b>2. Kho tri thức</b><br>
+        • <code class="text-indigo-600 font-bold">/quanly</code> / <code class="text-indigo-600 font-bold">/ql</code> - Mở kho tri thức.<br>
+        • <code class="text-indigo-600 font-bold">/day [hỏi] | [đáp]</code> - Dạy KienoraAI.<br>
+        • <code class="text-indigo-600 font-bold">/day [hỏi] | [đáp] | [tên file] | [link]</code> - Dạy kèm tài liệu.<br>
+        • <code class="text-indigo-600 font-bold">/tim [từ khóa]</code> - Tìm tri thức.<br>
+      `;
+
+      if (currentRole === "admin") {
+        html += `
+          • <code class="text-rose-600 font-bold">/xoa [cụm từ]</code> - Xóa tri thức chung.<br>
+          • <code class="text-rose-600 font-bold">/xoatoanbo</code> - Xóa toàn bộ kho chung.<br>`;
+      }
+
+      html += `
+        <br><b>3. Tiện ích</b><br>
+        • <code class="text-indigo-600 font-bold">/diem [mã_hs]</code> - Tra cứu hồ sơ/điểm.<br>
+        • <code class="text-indigo-600 font-bold">/lich</code> / <code class="text-indigo-600 font-bold">/thoikhoabieu</code> - Lịch/Thời khóa biểu.<br>
+        • <code class="text-indigo-600 font-bold">/thongbao</code> - Thông báo nhà trường.
+      `;
+
+      if (currentUser && currentRole === "admin") {
+        html += `
+          <br><br><b>🛡️ 4. Quản trị</b><br>
+          • <code class="text-rose-600 font-bold">/ds_tk</code> - Danh sách tài khoản.<br>
+          • <code class="text-rose-600 font-bold">/duyet_tk [user]</code> - Duyệt tài khoản.<br>
+          • <code class="text-rose-600 font-bold">/khoa_tk [user]</code> - Khóa tài khoản.<br>
+          • <code class="text-rose-600 font-bold">/ds_tt</code> - Tri thức chờ duyệt.<br>
+          • <code class="text-rose-600 font-bold">/duyet_tt [dòng]</code> - Duyệt tri thức.<br>
+          • <code class="text-rose-600 font-bold">/xoa_tt [dòng]</code> - Từ chối tri thức.<br>
+          • <code class="text-rose-600 font-bold">/backup</code> - Sao lưu.<br>
+          • <code class="text-rose-600 font-bold">/logs</code> - Nhật ký hệ thống.
+        `;
+      }
+
+      return html;
+    }
+
+    if (["/xinchao", "hi", "hello"].includes(lowerText)) {
+      return `👋 Xin chào! Tôi là <b>KienoraAI</b>. Bạn cần tôi hỗ trợ gì? Gõ <code class="text-indigo-600 font-bold">/help</code> để xem các lệnh.`;
+    }
+
+    if (lowerText === "/thongtin" || lowerText === "/info") {
+      const userDisplay = currentUser
+        ? `<b>${escapeHtml(currentUser)}</b> (${currentRole === "admin" ? "Quản trị viên" : "Cá nhân"})`
+        : "Chưa đăng nhập (Khách)";
+
+      return `
+        ℹ️ <b>Thông tin KienoraAI</b><br>
+        • Tài khoản: ${userDisplay}<br>
+        • Kho tri thức chung: ${learnedList.length} mục<br>
+        • Kho cá nhân: ${personalSheetData.length} mục<br>
+        • Trạng thái: 🟢 Trực tuyến
+      `;
+    }
+
+    if (lowerText === "/thongke") {
+      return `
+        📊 <b>Thống kê KienoraAI</b><br>
+        • Tri thức chung: <b>${learnedList.length}</b> mục.<br>
+        • Tri thức cá nhân: <b>${personalSheetData.length}</b> mục.
+      `;
+    }
+
+    if (lowerText === "/lammoi" || lowerText === "/sync") {
+      const ok = await loadCloudData(false);
+      return ok
+        ? `🔄 <b>Đã đồng bộ dữ liệu KienoraAI với Google Sheets.</b>`
+        : `⚠️ <b>Đồng bộ chưa thành công.</b> KienoraAI đang dùng dữ liệu cục bộ.`;
+    }
+
+    if (lowerText === "/quanly" || lowerText === "/ql") {
+      openQAManager();
+      return `🗂️ <b>Đã mở kho tri thức KienoraAI.</b>`;
+    }
+
+    if (lowerText === "/xoatoanbo") {
+      if (currentRole !== "admin") {
+        return `⛔ Lệnh này chỉ dành cho <b>Quản trị viên</b>.`;
+      }
+
+      if (!confirm("Xác nhận xóa TOÀN BỘ kho tri thức chung?")) {
+        return "ℹ️ Đã hủy thao tác xóa.";
+      }
+
+      try {
+        await syncToCloud([]);
+        return `🗑️ <b>Đã xóa toàn bộ kho tri thức chung.</b>`;
+      } catch {
+        return `❌ Không thể xóa kho tri thức chung.`;
+      }
+    }
+
+    if (lowerText.startsWith("/xoa ")) {
+      if (currentRole !== "admin") {
+        return `⛔ Chỉ <b>Quản trị viên</b> mới có quyền xóa kho tri thức chung.`;
+      }
+
+      const keyword = text.substring(5).trim().toLowerCase();
+      if (!keyword) return `⚠️ Hãy nhập từ khóa cần xóa.`;
+
+      const before = learnedList.length;
+
+      const filtered = learnedList.filter(item => {
+        const q = normalizeItem(item).q.toLowerCase();
+        const a = normalizeItem(item).a.toLowerCase();
+        return !q.includes(keyword) && !a.includes(keyword);
+      });
+
+      const deleted = before - filtered.length;
+
+      if (!deleted) {
+        return `🔍 Không tìm thấy mục chứa "<b>${escapeHtml(keyword)}</b>".`;
+      }
+
+      try {
+        await syncToCloud(filtered);
+        return `🗑️ <b>Đã xóa ${deleted} mục</b> khỏi kho tri thức chung.`;
+      } catch {
+        return `❌ Không thể đồng bộ thao tác xóa.`;
+      }
+    }
+
+    if (lowerText.startsWith("/tim ")) {
+      const keyword = text.substring(5).trim().toLowerCase();
+
+      if (!keyword) return `⚠️ Hãy nhập từ khóa cần tìm.`;
+
+      const results = learnedList.filter(item => {
+        const normalized = normalizeItem(item);
+        return normalized.q.toLowerCase().includes(keyword) ||
+               normalized.a.toLowerCase().includes(keyword);
+      });
+
+      if (!results.length) {
+        return `🔍 Không tìm thấy kết quả cho "<b>${escapeHtml(keyword)}</b>".`;
+      }
+
+      let html = `🔍 <b>Tìm thấy ${results.length} kết quả:</b>
+        <div class="mt-2 space-y-1.5 max-h-48 overflow-y-auto">`;
+
+      results.forEach((raw, index) => {
+        const item = normalizeItem(raw);
+
+        html += `
+          <div class="bg-indigo-50 p-2 rounded-xl border border-indigo-100">
+            <p class="font-bold text-indigo-700">
+              ${index + 1}. ${escapeHtml(item.q)}
+            </p>
+            <p class="text-slate-600">${escapeHtml(item.a)}</p>
+          </div>`;
+      });
+
+      html += "</div>";
+      return html;
+    }
+
+    if (lowerText.startsWith("/day ")) {
+      if (!currentUser) {
+        return `⚠️ Bạn cần <b class="text-rose-600">đăng nhập</b> để dạy KienoraAI.`;
+      }
+
+      const content = text.substring(5).trim();
+      const parts = content.split("|").map(x => x.trim());
+
+      if (parts.length < 2 || parts.length > 4) {
+        return `
+          ⚠️ Sai cú pháp.<br>
+          Dạng cơ bản:<br>
+          <code>/day câu hỏi | câu trả lời</code><br><br>
+          Có tài liệu:<br>
+          <code>/day câu hỏi | câu trả lời | TenFile.pdf | https://...</code>
+        `;
+      }
+
+      const q = parts[0].toLowerCase();
+      const a = parts[1];
+      const fileName = parts[2] || "";
+      const fileUrl = parts[3] || "";
+
+      if (!q || !a) return "⚠️ Câu hỏi và câu trả lời không được để trống.";
+
+      if (fileUrl && !isValidHttpUrl(fileUrl)) {
+        return `⚠️ Link tài liệu không hợp lệ. Link phải bắt đầu bằng http:// hoặc https://`;
+      }
+
+      try {
+        const result = await postApi({
+          action: "teach_with_file",
+          username: currentUser,
+          q,
+          a,
+          fileName,
+          fileUrl
+        });
+
+        if (result?.status && result.status !== "success") {
+          return `❌ ${escapeHtml(result.message || "Không thể lưu tri thức.")}`;
+        }
+
+        personalSheetData.push({ q, a, fileName, fileUrl });
+
+        return `
+          ✅ <b>KienoraAI đã tiếp nhận tri thức!</b><br>
+          • Đã lưu vào kho cá nhân của bạn.<br>
+          • Đã gửi yêu cầu kiểm duyệt lên hệ thống chính.
+          ${fileName ? `<br>📎 Tài liệu: <b>${escapeHtml(fileName)}</b>` : ""}
+        `;
+      } catch {
+        return `❌ Không thể kết nối Google Sheets. Tri thức chưa được xác nhận đã lưu.`;
+      }
+    }
+
+    if (lowerText === "/thongbao") {
+      return `
+        📢 <b>Thông báo KienoraAI</b><br>
+        1. Triển khai cập nhật hồ sơ học sinh khối 10 năm học mới.<br>
+        2. Giáo viên chủ nhiệm kiểm tra dữ liệu học sinh trên hệ thống.<br>
+        3. Có thể sử dụng <code>/day</code> để cập nhật tri thức mới.
+      `;
+    }
+
+    if (lowerText === "/lich" || lowerText === "/thoikhoabieu") {
+      return `
+        📅 <b>Lịch công tác / Thời khóa biểu</b><br>
+        • Sáng thứ Hai: Chào cờ và họp hội đồng giáo viên.<br>
+        • Thứ Hai đến thứ Sáu: Cập nhật dữ liệu học sinh và xử lý hồ sơ.
+      `;
+    }
+
+    if (lowerText.startsWith("/diem ")) {
+      const maHS = text.substring(6).trim();
+
+      if (!maHS) {
+        return `⚠️ Ví dụ: <code>/diem HS123</code>`;
+      }
+
+      return `
+        🔍 Đang tra cứu hồ sơ/điểm số cho mã học sinh:
+        <b>${escapeHtml(maHS)}</b>.<br>
+        <i>Tính năng bảng điểm chi tiết sẽ sử dụng dữ liệu Google Sheets tương ứng khi backend được kết nối.</i>
+      `;
+    }
+
+    /* ================= ADMIN COMMAND FORWARD ================= */
+
+    const adminPrefixes = [
+      "/ds_tk",
+      "/duyet_tk",
+      "/khoa_tk",
+      "/ds_tt",
+      "/duyet_tt",
+      "/xoa_tt",
+      "/backup",
+      "/logs"
+    ];
+
+    if (adminPrefixes.some(cmd => lowerText === cmd || lowerText.startsWith(cmd + " "))) {
+      if (!currentUser || currentRole !== "admin") {
+        return `⛔ Lệnh này yêu cầu quyền <b>Quản trị viên</b>.`;
+      }
+
+      try {
+        const result = await postApi({
+          action: "admin_cmd",
+          username: currentUser,
+          command: text
+        });
+
+        if (result?.status === "success") {
+          return String(result.message || "Đã thực hiện lệnh.").replace(/\n/g, "<br>");
+        }
+
+        return `⚠️ ${escapeHtml(result?.message || "Google Apps Script không thực hiện được lệnh.")}`;
+      } catch {
+        return `❌ Không thể kết nối máy chủ Google Apps Script.`;
+      }
+    }
+
+    /* ================= TRA CỨU TRI THỨC THÔNG MINH ================= */
+
+    const normalizeSearchText = value => String(value ?? "")
+      .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d").replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ").trim();
+
+    const searchText = normalizeSearchText(text);
+
+    const findKnowledge = list => {
+      const items = normalizeList(list);
+      if (!items.length || !searchText) return null;
+      let hit = items.find(item => normalizeSearchText(item.q) === searchText);
+      if (hit) return hit;
+      hit = items.find(item => { const q=normalizeSearchText(item.q); return q.length>=3 && searchText.includes(q); });
+      if (hit) return hit;
+      hit = items.find(item => { const q=normalizeSearchText(item.q); return searchText.length>=3 && q.includes(searchText); });
+      if (hit) return hit;
+      const words=[...new Set(searchText.split(" ").filter(w=>w.length>=2))]; let best=null,bestScore=0;
+      for(const item of items){ const q=normalizeSearchText(item.q); if(!q) continue; let matched=0;
+        words.forEach(w=>{if(q.split(" ").includes(w)||q.includes(w)) matched++;});
+        const score=matched/Math.max(words.length,1); if(matched>=2&&score>=0.45&&score>bestScore){best=item;bestScore=score;}
+      }
+      return best;
+    };
+
+    if (currentUser && personalSheetData.length) {
+      const foundPersonal = findKnowledge(personalSheetData);
+      if (foundPersonal) return buildKnowledgeResponse(foundPersonal, "🔒 Kho tri thức cá nhân");
+    }
+
+    let foundShared = findKnowledge(learnedList);
+
+    // Nếu dữ liệu cục bộ chưa có hoặc không tìm thấy, hỏi trực tiếp Google Apps Script.
+    if (!foundShared) {
+      try {
+        const cloud = await postApi({
+          action: "search",
+          username: currentUser || "guest",
+          keyword: text
+        });
+        if (cloud?.status === "success" && Array.isArray(cloud.data) && cloud.data.length) {
+          foundShared = normalizeItem(cloud.data[0]);
+        }
+      } catch (error) {
+        console.warn("Cloud search failed:", error);
+      }
+    }
+
+    if (foundShared) return buildKnowledgeResponse(normalizeItem(foundShared), "🌐 Kho tri thức chung");
+
+    try {
+      await postApi({
+        action: "log_missing",
+        username: currentUser || "guest",
+        missingQuery: text
+      });
+    } catch {}
+
+    return `
+      Hmm, <b>KienoraAI</b> chưa có dữ liệu về vấn đề này.
+      Câu hỏi đã được ghi nhận để Quản trị viên tham khảo bổ sung.
+      Gõ <code class="text-indigo-600">/help</code> để xem hướng dẫn.
+    `;
+  }
+
+  function buildKnowledgeResponse(item, badgeText) {
+    let html = `
+      <div class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold mb-1 inline-block">
+        ${badgeText}
+      </div>
+      <p>${escapeHtml(item.a)}</p>
+    `;
+
+    const url = safeDownloadUrl(item.fileUrl);
+
+    if (item.fileName && url) {
+      html += `
+        <div class="mt-3 bg-white border border-indigo-100 rounded-2xl p-3 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-9 h-9 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-file-lines"></i>
+              </div>
+              <div class="truncate">
+                <p class="font-bold text-xs text-slate-800 truncate">
+                  ${escapeHtml(item.fileName)}
+                </p>
+                <p class="text-[10px] text-slate-400">
+                  Tài liệu đính kèm
+                </p>
+              </div>
+            </div>
+
+            <a href="${url}" target="_blank" rel="noopener noreferrer"
+              class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shrink-0">
+              <i class="fa-solid fa-download"></i>
+              Tải tài liệu
+            </a>
+          </div>
+        </div>`;
+    } else if (item.fileName && !url) {
+      html += `
+        <div class="mt-3 bg-amber-50 border border-amber-100 rounded-xl p-2 text-[10px] text-amber-700">
+          📎 ${escapeHtml(item.fileName)}
+          <br>Link tài liệu chưa hợp lệ hoặc chưa được cung cấp.
+        </div>`;
+    }
+
+    return html;
+  }
+
+  /* ================= COMMAND EXECUTION ================= */
+
+  async function executeUserCommand() {
+    const input = document.getElementById("cmdInput");
+    const container = document.getElementById("cmdMessages");
+    const text = input.value.trim();
+
+    if (!text) return;
+
+    container.insertAdjacentHTML("beforeend", `
+      <div class="flex items-start justify-end gap-2">
+        <div class="bg-indigo-600 text-white p-3 rounded-2xl rounded-tr-sm shadow-sm max-w-[85%] text-xs">
+          ${escapeHtml(text)}
+        </div>
+        <div class="w-7 h-7 bg-slate-300 text-slate-700 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold">
+          Bạn
+        </div>
+      </div>
+    `);
+
+    input.value = "";
+    container.scrollTop = container.scrollHeight;
+
+    const loadingId = "ai_loading_" + Date.now();
+
+    container.insertAdjacentHTML("beforeend", `
+      <div id="${loadingId}" class="flex items-start gap-2">
+        <div class="w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold">AI</div>
+        <div class="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm border border-slate-100 text-slate-400 text-xs italic">
+          KienoraAI đang xử lý...
+        </div>
+      </div>
+    `);
+
+    container.scrollTop = container.scrollHeight;
+
+    try {
+      const reply = await generateAIResponse(text);
+      document.getElementById(loadingId)?.remove();
+      addAIMessage(reply);
+    } catch (error) {
+      document.getElementById(loadingId)?.remove();
+      addAIMessage("❌ KienoraAI gặp lỗi khi xử lý yêu cầu. Vui lòng thử lại.");
+      console.error(error);
+    }
+  }
+
+  /* ================= START ================= */
+
+  window.addEventListener("load", async () => {
+    updateAuthUI();
+    await loadCloudData(false);
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      document.getElementById("authModal").classList.add("hidden");
+      document.getElementById("qaManagerModal").classList.add("hidden");
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,82 @@
+/*
+ * KienoraAI - style.css
+ * CSS bổ sung cho giao diện KienoraAI.
+ * Tailwind CSS vẫn được nạp trong HTML qua CDN.
+ */
+:root {
+  --kienora-bg: #f1f5f9;
+  --kienora-primary: #4f46e5;
+  --kienora-text: #0f172a;
+  --kienora-border: #e2e8f0;
+}
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; color: var(--kienora-text); background: var(--kienora-bg); }
+button:disabled { opacity: .6; cursor: not-allowed; }
+input, textarea, select { font: inherit; }
+input::placeholder, textarea::placeholder { color: #94a3b8; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid var(--kienora-primary);
+  outline-offset: 2px;
+}
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f8fafc; border-radius: 999px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+* { scrollbar-width: thin; scrollbar-color: #cbd5e1 #f8fafc; }
+
+@keyframes kienora-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .45; }
+}
+.kienora-pulse { animation: kienora-pulse 1.6s ease-in-out infinite; }
+
+@keyframes kienora-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.kienora-fade-in { animation: kienora-fade-in .2s ease-out; }
+
+.kienora-file-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  text-decoration: none;
+  transition: transform .15s ease, opacity .15s ease;
+}
+.kienora-file-link:hover { transform: translateY(-1px); opacity: .9; }
+
+#commandBoxContainer { max-width: calc(100vw - 1rem); }
+
+@media (max-width: 640px) {
+  #commandBoxContainer {
+    width: min(420px, calc(100vw - 1.5rem));
+    right: -.25rem;
+  }
+  #authArea { max-width: calc(100vw - 1rem); }
+  #authUsernameText {
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  #eduCommandWidget, #authArea, #qaManagerModal, #authModal {
+    display: none !important;
+  }
+  body { background: #fff !important; }
+}
